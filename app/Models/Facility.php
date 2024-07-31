@@ -5,12 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Block extends Model
+class Facility extends Model
 {
     use HasFactory;
-    protected $fillable = [
+    protected $fillable =[
         'id',
+        'nin',
+        'proposed_date',
         'name',
-        'district_code',
+        'facility_type',
+        'block_id',
+        'incharge',
+        'status',
     ];
 }
