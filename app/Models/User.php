@@ -3,14 +3,21 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable //implements FilamentUser
 {
     use HasFactory, Notifiable;
 
+    // public function canAccessPanel(Panel $panel): bool
+    // {
+    //     return $this->Role === 'Admin'||$this->Role === 'DMO'||$this->Role === 'MO';
+    // }
     /**
      * The attributes that are mass assignable.
      *
@@ -18,6 +25,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'image',
         'email',
         'password',
         'nin',
@@ -27,6 +35,7 @@ class User extends Authenticatable
         'bank_name',
         'account_no',
         'ifsc_code',
+        'district_code',
         'address',
         'contact_1',
         'contact_2',
@@ -57,4 +66,8 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function facility()
+{
+    return $this->belongsTo(Facility::class, 'nin', 'nin');
+}
 }

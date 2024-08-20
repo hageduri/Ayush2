@@ -9,9 +9,13 @@ class District extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'id',
+
         'district_code',
         'district_name',
     ];
+    public function facility()
+    {
+        return $this->hasMany(Facility::class, 'district_code', 'district_code');
+    }
 
 }

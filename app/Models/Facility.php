@@ -9,13 +9,29 @@ class Facility extends Model
 {
     use HasFactory;
     protected $fillable =[
-        'id',
+
         'nin',
         'proposed_date',
         'name',
         'facility_type',
-        'block_id',
+        'district_code',
+        'block_name',
         'incharge',
+        'image',
         'status',
     ];
+
+    public function user()
+{
+    return $this->hasOne(User::class, 'nin', 'nin');
+}
+public function district()
+    {
+        return $this->belongsTo(District::class, 'district_code', 'district_code');
+    }
+
+public function member()
+{
+    return $this->hasMany(Ahwc_Member::class, 'nin', 'nin');
+}
 }

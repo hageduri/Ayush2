@@ -16,11 +16,13 @@ return new class extends Migration
             $table->string('nin', 50)->unique()->nullable();
             $table->string('role', 50)->nullable();
             $table->string('gender', 20)->nullable();
+            $table->string('image')->nullable();
             $table->date('dob')->nullable();
             $table->string('bank_name', 100)->nullable();
             $table->string('account_no', 20)->nullable();
             $table->string('ifsc_code', 11)->nullable();
             $table->text('address')->nullable();
+            $table->string('district_code', 26)->nullable();
             $table->string('contact_1', 15)->nullable();
             $table->string('contact_2', 15)->nullable();
             $table->string('status', 20)->nullable();

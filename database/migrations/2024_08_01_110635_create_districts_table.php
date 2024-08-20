@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('blocks', function (Blueprint $table) {
-            $table->string('id', 26);
-            $table->string('name', 100);
-            $table->integer('district_code', 4);
+        Schema::create('districts', function (Blueprint $table) {
+            $table->id();
+            $table->integer('district_code');
+            $table->string('district_name');
+            $table->timestamps();
         });
     }
 
@@ -23,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('blocks');
+        Schema::dropIfExists('districts');
     }
 };

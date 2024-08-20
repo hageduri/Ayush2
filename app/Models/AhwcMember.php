@@ -5,23 +5,30 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Ahwc_Member extends Model
+class AhwcMember extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'id',
+
         'nin',
         'name',
+        'image',
         'gender',
         'dob',
         'address',
         'contact_1',
         'contact_2',
         'email',
-        'designation',
+        'role',
         'bank_name',
+        'district_code',
         'account_no',
         'ifsc_code',
         'status',
     ];
+
+    public function facility()
+    {
+        return $this->belongsTo(Facility::class, 'nin', 'nin');
+    }
 }
