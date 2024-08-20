@@ -7,7 +7,6 @@ use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\District;
 use App\Models\Facility;
 use App\Models\User;
-use App\Policies\UserPolicy;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -217,10 +216,5 @@ class UserResource extends Resource
             'create' => Pages\CreateUser::route('/create'),
             // 'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
-    }
-
-    public static function getModelPolicyName(): string
-    {
-        return UserPolicy::class;
     }
 }
