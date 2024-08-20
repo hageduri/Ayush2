@@ -60,6 +60,9 @@ class AdminPanelProvider extends PanelProvider
                 FilamentEditProfilePlugin::make()
                 ->shouldShowDeleteAccountForm(false)
                 ->setNavigationLabel('Setting')
+
+                ->setNavigationGroup('Profile')
+                ->setIcon('heroicon-o-cog-8-tooth')
             ]);
     }
 }
