@@ -6,6 +6,7 @@ use App\Filament\Resources\FacilityResource\Pages;
 use App\Filament\Resources\FacilityResource\RelationManagers;
 use App\Models\District;
 use App\Models\Facility;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -18,12 +19,24 @@ use Filament\Tables\Table;
 use Filament\Forms\Components\Tabs;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class FacilityResource extends Resource
 {
     protected static ?string $model = Facility::class;
+    protected static ?string $label = 'All facility';
+    public static function canViewAny(): bool
+    {
+        return Auth::user()->can('viewAny', Facility::class);
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
+
+    // public static function canViewOwn():bool
+    // {
+    //     return Auth::user()->can('viewAny', User::class);
+    // }
+
 
     public static function form(Form $form): Form
     {

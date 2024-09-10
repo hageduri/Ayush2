@@ -17,5 +17,10 @@ class District extends Model
     {
         return $this->hasMany(Facility::class, 'district_code', 'district_code');
     }
+    public function dmo()
+    {
+        return $this->hasOne(User::class, 'district_code', 'district_code')
+        ->where('role', 'DMO');
+    }
 
 }

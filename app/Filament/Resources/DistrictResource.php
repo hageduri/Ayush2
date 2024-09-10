@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\DistrictExporter;
 use App\Filament\Resources\DistrictResource\Pages;
 use App\Filament\Resources\DistrictResource\RelationManagers;
 use App\Models\District;
@@ -10,6 +11,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -49,6 +51,11 @@ class DistrictResource extends Resource
                 TextColumn::make('district_code')->sortable()
             ])
             ->filters([
+
+            ])
+            ->headerActions([
+
+                    ExportAction::make()->exporter(DistrictExporter::class),
 
             ])
             ->actions([

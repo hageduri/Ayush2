@@ -2,32 +2,31 @@
 
 namespace App\Policies;
 
-use App\Models\AhwcMember;
+use App\Models\Facility;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class AhwcMemberPolicy
+class FacilityPolicy
 {
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return $user->role=='MO';
-
+        return $user->role === 'ADMIN'||$user->role === 'SUPER';
     }
 
     public function viewAnyAll(User $user): bool
     {
-        return $user->role === 'ADMIN';
+        return $user->role === 'DMO';
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, AhwcMember $ahwcMember): bool
+    public function view(User $user, Facility $facility): bool
     {
-        return $user->role=='MO';
+        return true;
     }
 
     /**
@@ -35,38 +34,38 @@ class AhwcMemberPolicy
      */
     public function create(User $user): bool
     {
-        return $user->role=='MO';
+        return $user->role === 'ADMIN'||$user->role === 'SUPER';
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, AhwcMember $ahwcMember): bool
+    public function update(User $user, Facility $facility): bool
     {
-        return $user->role=='MO';
+        return $user->role === 'ADMIN'||$user->role === 'SUPER';
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, AhwcMember $ahwcMember): bool
+    public function delete(User $user, Facility $facility): bool
     {
-        return $user->role=='MO';
+        return $user->role === 'ADMIN'||$user->role === 'SUPER';
     }
 
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, AhwcMember $ahwcMember): bool
+    public function restore(User $user, Facility $facility): bool
     {
-        return $user->role=='MO';
+        return $user->role === 'ADMIN'||$user->role === 'SUPER';
     }
 
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, AhwcMember $ahwcMember): bool
+    public function forceDelete(User $user, Facility $facility): bool
     {
-        return $user->role=='MO';
+        return $user->role === 'ADMIN'||$user->role === 'SUPER';
     }
 }

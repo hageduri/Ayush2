@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\UserExporter;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\District;
@@ -17,7 +18,9 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
+use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
@@ -30,12 +33,19 @@ use Illuminate\Support\Facades\Date;
 
 class UserResource extends Resource
 {
-    public string $rl;
+
     protected static ?string $model = User::class;
-    protected static ?string $label = 'Staff';
+
+
+    protected static ?string $label = 'All MO';
 
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()->can('viewAny', User::class);
+    }
 
     // public static function form(Form $form): Form
     // {
@@ -151,13 +161,14 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('name')->searchable()->sortable()->weight(FontWeight::Bold),
+
+                TextColumn::make('facility.name')->weight(FontWeight::Bold),
                 TextColumn::make('facility.district.district_name'),
-                TextColumn::make('facility.name'),
-                TextColumn::make('name')->searchable()->sortable(),
 
                 // TextColumn::make('email'),
                 TextColumn::make('gender'),
-                TextColumn::make('role'),
+                TextColumn::make('role')->label('Designation'),
                 TextColumn::make('contact_1')->label('Contact'),
                 TextColumn::make('status'),
 
@@ -169,14 +180,30 @@ class UserResource extends Resource
                 ->orderBy('districts.district_name', 'asc')
 
             )
+        //     ->modifyQueryUsing(fn (Builder $query) => $query
+        //     ->leftJoin('facilities', 'users.nin', '=', 'facilities.nin')
+        //     ->leftJoin('districts', function ($join) {
+        //         $join->on('facilities.district_code', '=', 'districts.district_code')
+        //             ->orOn('users.district_code', '=', 'districts.district_code');
+        //     })
+        //     ->select('users.*', 'districts.district_name')
+        //     ->orderBy('districts.district_name', 'asc')
+        //     ->where(function ($query) {
+        //         $query->whereNotNull('facilities.nin')
+        //             ->orWhere('users.role', 'DMO');
+        //     })
+        // )
+            ->headerActions([
+                ExportAction::make()->exporter(UserExporter::class)->label('Download'),
+            ])
             ->filters([
-                SelectFilter::make('role')
-                            ->options([
-                                // 'SupAdmin' => 'SupAdmin',
-                                // 'Admin' => 'Admin',
-                                'DMO' => 'DMO',
-                                'MO' => 'MO',
-                            ]),
+                // SelectFilter::make('role')
+                //             ->options([
+                //                 // 'SupAdmin' => 'SupAdmin',
+                //                 // 'Admin' => 'Admin',
+                //                 // 'DMO' => 'DMO',
+                //                 'MO' => 'MO',
+                //             ]),
 
                 SelectFilter::make('district')
                 ->label('Filter by District')
@@ -219,8 +246,5 @@ class UserResource extends Resource
         ];
     }
 
-    public static function getModelPolicyName(): string
-    {
-        return UserPolicy::class;
-    }
+
 }

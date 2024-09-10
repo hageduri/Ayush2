@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\AllUsersExporter;
+use App\Filament\Exports\UserExporter;
 use App\Filament\Resources\AllUsersResource\Pages;
 use App\Filament\Resources\AllUsersResource\RelationManagers;
 use App\Models\AllUsers;
@@ -9,6 +11,7 @@ use App\Models\District;
 use App\Models\Facility;
 use App\Models\User;
 use App\Policies\AllUsersPolicy;
+use Filament\Actions\Exports\Exporter;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -18,20 +21,30 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class AllUsersResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    public static function canViewAny(): bool
+    {
+        return Auth::user()->can('viewAnyAll', User::class);
+    }
+
+    protected static ?string $navigationIcon = 'heroicon-o-user-plus';
 
     public static function form(Form $form): Form
     {
         $usedNins = User::whereNotNull('nin')->pluck('nin')->toArray();
+        $usedDistricts = User::where('role', 'DMO')->pluck('district_code')->toArray();
+        $availableDistricts = District::whereNotIn('district_code',
+        $usedDistricts)->pluck('district_name', 'district_code')->toArray();
         return $form
         ->schema([
             Tabs::make('Tabs')
@@ -61,14 +74,47 @@ class AllUsersResource extends Resource
                         ->options(Facility::whereNotIn('nin', $usedNins)->pluck('name', 'nin')->toArray())
                         ->searchable(),
 
+                        // Select::make('role')
+                        // ->required()
+                        // ->options([
+                        //     // 'SupAdmin' => 'SupAdmin',
+                        //     // 'Admin' => 'Admin',
+                        //     'DMO' => 'DMO',
+                        //     'MO' => 'MO',
+                        // ]),
+                        // Select::make('district_code')
+                        // ->label('District')
+                        // ->required()
+                        // ->options(
+                        //     District::all()->pluck('district_name', 'district_code')->toArray()
+                        // ),
                         Select::make('role')
-                        ->required()
-                        ->options([
-                            // 'SupAdmin' => 'SupAdmin',
-                            // 'Admin' => 'Admin',
-                            'DMO' => 'DMO',
-                            'MO' => 'MO',
-                        ]),
+                            ->required()
+                            ->options([
+                                'DMO' => 'DMO',
+                                'MO' => 'MO',
+                            ])
+                            ->reactive() // Make role reactive to trigger dynamic behavior
+                            ->afterStateUpdated(function ($state, callable $set) use ($availableDistricts) {
+                                // If role is 'DMO', limit the districts to available ones
+                                if ($state === 'DMO') {
+                                    $set('district_code', array_key_first($availableDistricts)); // Set the first available district by default
+                                }
+                            }),
+
+                        Select::make('district_code')
+                            ->label('District')
+                            ->required()
+                            ->options(function (callable $get) use ($availableDistricts) {
+                                // If role is 'DMO', show only districts without DMO
+                                if ($get('role') === 'DMO') {
+                                    return $availableDistricts;
+                                }
+
+                                // Otherwise, show all districts
+                                return District::all()->pluck('district_name', 'district_code')->toArray();
+                            })
+                            ->searchable(),
                     ]),
 
                 Tabs\Tab::make('Personal Details')
@@ -94,18 +140,13 @@ class AllUsersResource extends Resource
                         TextInput::make('designation')
                         ->dehydrateStateUsing(fn ($state)=>strtoupper($state)),
 
-                        Select::make('district_code')
-                        ->label('District')
-                        ->required()
-                        ->options(
-                            District::all()->pluck('district_name', 'district_code')->toArray()
-                        ),
+
 
                         Textarea::make('address')
                         ->rows(6)
                         ->columns(10),
 
-                    ])->visibleOn('edit'),
+                    ])->visibleOn('edit')->hidden(fn (callable $get) => in_array($get('role'), ['DMO', 'ADMIN'])),
 
 
                 Tabs\Tab::make('Bank Details')
@@ -126,7 +167,7 @@ class AllUsersResource extends Resource
                         ->maxLength(11)
                         ->dehydrateStateUsing(fn ($state)=>strtoupper($state)),
                     ])//->hidden(fn()=>Auth::user()->role=='SUPER')
-                    ->visibleOn('edit'),
+                    ->visibleOn('edit')->hidden(fn (callable $get) => in_array($get('role'), ['DMO', 'ADMIN'])),
             ])->columns(2)
             ,
 
@@ -139,19 +180,23 @@ class AllUsersResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('facility.district.district_name'),
-                TextColumn::make('facility.name'),
                 TextColumn::make('name')->searchable()->sortable(),
+
+                TextColumn::make('facility.name'),
+                TextColumn::make('district.district_name'),
+
 
                 // TextColumn::make('email'),
                 TextColumn::make('gender'),
-                TextColumn::make('role'),
+                TextColumn::make('role')->label('Designation'),
                 TextColumn::make('contact_1')->label('Contact'),
                 TextColumn::make('status'),
             ])
             ->filters([
                 //
             ])
+
+
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
@@ -177,8 +222,5 @@ class AllUsersResource extends Resource
             'edit' => Pages\EditAllUsers::route('/{record}/edit'),
         ];
     }
-    public static function getModelPolicyName(): string
-    {
-        return AllUsersPolicy::class;
-    }
+
 }

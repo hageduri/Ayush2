@@ -30,6 +30,11 @@ class AhwcMemberResource extends Resource
     protected static ?string $model = AhwcMember::class;
     protected static ?string $label = 'My Team';
 
+    public static function canViewAny(): bool
+    {
+        return Auth::user()->can('viewAny', AhwcMember::class);
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
     public static function form(Form $form): Form
@@ -99,6 +104,21 @@ class AhwcMemberResource extends Resource
                                 District::all()->pluck('district_name', 'district_code')->toArray()
                             ),
 
+                            // Select::make('district_code')
+                            // ->label('District')
+                            // ->required()
+                            // ->options(
+                            //     District::all()->pluck('district_name', 'district_code')->toArray()
+                            // )
+                            // ->default(function () {
+                            //     // Fetch district code based on the authenticated user's nin
+                            //     $user = Auth::user();
+                            //     $district = District::where('nin', $user->nin)->first();
+                            //     return $district ? $district->district_code : null;
+                            // }) // Set default based on nin
+                            // ->readOnly(), // Optionally make it read-only
+
+
                             Textarea::make('address')
                             ->rows(6)
                             ->columns(10),
@@ -148,7 +168,9 @@ class AhwcMemberResource extends Resource
                 TextColumn::make('contact_1')->label('Contact'),
                 TextColumn::make('status'),
             ])
-            ->modifyQueryUsing(fn (Builder $query) => $query->where('nin', '=', $user->nin))//this line state that each mo will only can see his faclity member
+            ->modifyQueryUsing(fn (Builder $query) =>
+            $query->where('nin', '=', $user->nin
+            ))//this line state that each mo will only can see his faclity member
             ->filters([
 
 

@@ -70,4 +70,9 @@ class User extends Authenticatable //implements FilamentUser
 {
     return $this->belongsTo(Facility::class, 'nin', 'nin');
 }
+public function district()
+    {
+        return $this->belongsTo(District::class, 'district_code', 'district_code');
+    }
+
 }

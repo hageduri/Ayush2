@@ -28,7 +28,8 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->profile()
+            ->databaseNotifications()
+            // ->profile()
             ->colors([
                 'primary' => Color::Amber,
             ])

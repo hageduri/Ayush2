@@ -32,6 +32,6 @@ public function district()
 
 public function member()
 {
-    return $this->hasMany(Ahwc_Member::class, 'nin', 'nin');
+    return $this->hasMany(AhwcMember::class, 'nin', 'nin');
 }
 }
