@@ -34,4 +34,9 @@ public function member()
 {
     return $this->hasMany(AhwcMember::class, 'nin', 'nin');
 }
+
+public function indicator()
+{
+    return $this->hasMany(Indicator::class, 'nin', 'nin');
+}
 }

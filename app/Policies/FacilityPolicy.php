@@ -21,6 +21,11 @@ class FacilityPolicy
         return $user->role === 'DMO';
     }
 
+    public function viewReport(User $user): bool
+    {
+        return $user->role === 'DMO';
+    }
+
     /**
      * Determine whether the user can view the model.
      */
