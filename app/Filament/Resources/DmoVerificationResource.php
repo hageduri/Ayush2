@@ -2,55 +2,45 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\VerifyReportResource\Pages;
-use App\Filament\Resources\VerifyReportResource\RelationManagers;
-use App\Filament\Resources\VerifyReportResource\Widgets\StatusOverview;
-use App\Models\Facility;
+use App\Filament\Resources\DmoVerificationResource\Pages;
+use App\Filament\Resources\DmoVerificationResource\RelationManagers;
+use App\Models\DmoVerification;
 use App\Models\Indicator;
-
 use Carbon\Carbon;
+use Filament\Actions\ViewAction as ActionsViewAction;
 use Filament\Forms;
-use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Grid as ComponentsGrid;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ViewAction;
+use Filament\Tables\Columns\Layout\Grid;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Filament\Widgets\StatsOverviewWidget\Card;
-use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 
-// Add this widget class within the same resource file
-
-
-class VerifyReportResource extends Resource
+class DmoVerificationResource extends Resource
 {
     protected static ?string $model = Indicator::class;
 
-    protected static ?string $label = 'Verify Report';
+    protected static ?string $label = 'Approve Report';
     public static function canViewAny(): bool
     {
-        return Auth::user()->can('viewReportByAdmin', Indicator::class);
+        return Auth::user()->can('viewReport', Indicator::class);
     }
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    // public static function widgets(): array
-    // {
-    //     return [
-    //         StatusOverview::class,
-    //     ];
-    // }
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
     {
@@ -69,10 +59,15 @@ class VerifyReportResource extends Resource
                 ->sortable()
                 ->weight(FontWeight::Bold)
                 ->searchable(),
-                TextColumn::make('month')
-                ->sortable()
-                ->weight(FontWeight::Bold)
-                ->searchable(),
+
+                TextColumn::make('month'),
+
+                TextColumn::make('facility.user.name')
+                ->label('Incharge')
+                ->default('Not Assigned')
+                ->colors([
+                    'warning' => 'Not Assigned',
+                ]),
 
                 TextColumn::make('status')
                     ->label('Indicator Status')
@@ -85,19 +80,17 @@ class VerifyReportResource extends Resource
                         'pending' => 'warning',
                         'submitted' => 'success',
                         'rejected' => 'danger',
-                        'updated' => 'warning',
-                        'approved' => 'info'
+                        'approved' => 'info',
+                        'updated' => 'warning'
                     }),
             ])
-            // ->modifyQueryUsing(function (Builder $query) {
-            //     // Filter by the DMO's district
-            //     return $query
-            //     ->with('indicator')
-            //     ->whereHas('district', function ($query) {
-            //         $query->where('district_code', Auth::user()->district_code);
-            //     });
-            // })
-
+            ->modifyQueryUsing(function (Builder $query) {
+                // Filter by the DMO's district
+                return $query
+                ->whereHas('facility', function ($query) {
+                    $query->where('district_code', Auth::user()->district_code);
+                });
+            })
             ->filters([
                 SelectFilter::make('month')
                 ->options(function () {
@@ -108,45 +101,33 @@ class VerifyReportResource extends Resource
                     }
                     return $months;
                 })
-                ->default(function () {
-                    // Get the previous month
-                    $previousMonth = Carbon::now()->subMonth();
-
-                    // Format it as 'F-Y' (e.g., 'August-2023')
-                    return $previousMonth->format('F-Y');
-                })
             ],layout: FiltersLayout::AboveContent)
 
+
+
             ->actions([
-                // ViewAction::make('Verify')
-                // ->link()
-                // ->icon('heroicon-s-document-check')
-                // ->color('danger')
+                // ViewAction::make()
                 // ->form([
-                //     Select::make('indicator.status')
-                //         ->label('Status')
-                //         ->options([
-                //             'approved'=>'Approve',
-                //             'rejected'=>'Reject'
-                //         ]),
-
-                // ])->action(function ($record, $data) {
-                //     // Fetch the related indicator
-                //     $indicator = $record->indicator; // Assuming the Facility model has a relationship to Indicator
-
-                //     if ($indicator) {
-                //         // Update the status of the related indicator
-                //         $indicator->update([
-                //             'status' => $data['indicator']['status'], // Access 'indicator.status' from form data
-                //         ]);
-                //     }
-                // }),
-
-
-
+                //     TextInput::make('nin'),
+                //     TextInput::make('status'),
+                //     TextInput::make('month'),
+                //     TextInput::make('indicator_1'),
+                //     TextInput::make('indicator_2'),
+                //     TextInput::make('indicator_3'),
+                //     TextInput::make('indicator_4'),
+                //     TextInput::make('indicator_5'),
+                //     TextInput::make('indicator_6'),
+                //     TextInput::make('indicator_7'),
+                //     TextInput::make('indicator_8'),
+                //     TextInput::make('indicator_9'),
+                //     TextInput::make('indicator_10'),
+                // ])
+                // ->modalHeading('Facility Details')
+                // ->modalDescription('View facility and its indicators')
+                // ->modalWidth('4xl'),
                 ViewAction::make()
                 ->form([
-                    Grid::make() // Use Grid to define columns
+                    ComponentsGrid::make() // Use Grid to define columns
                         ->schema([
                             TextInput::make('nin')->columnSpan(1), // Adjust column span if needed
                             TextInput::make('status')->columnSpan(1),
@@ -173,9 +154,41 @@ class VerifyReportResource extends Resource
                 ->modalWidth('4xl'),
 
 
+                Action::make('Verify')
+                    ->form([
+                        Select::make('status')
+                            ->label('Status')
+                            ->options([
+                                'approved' => 'Approve',
+                                'rejected' => 'Reject',
+                            ])
+                            ->required(),
 
+                        TextInput::make('remarks')
+                            ->label('Remarks')
+                            ->placeholder('Provide a reason for rejection')
+                            ->required(fn ($get) => $get('status') === 'rejected') // Make remarks required if status is "rejected"
+                            ->visible(fn ($get) => $get('status') === 'rejected'),
+                    ])
+                    ->action(function ($record, $data) {
+                        $record->update([
+                            'status' => $data['status'],
+                            'remarks' => $data['remarks'] ?? null,
+                        ]);
+                         // Check if the status was updated to 'rejected'
+                        // if ($data['status'] === 'rejected') {
+                        //     // Notify the MO that their submission has been rejected
+                        //     Notification::make()
+                        //         ->title('Submission Rejected')
+                        //         ->body('Your submission for the month of ' . $record->month . ' has been rejected. Remarks: ' . ($data['remarks'] ?? 'No remarks provided.'))
+                        //         ->danger() // Display notification with a red badge
+                        //         ->sendToDatabase($record->user); // Assuming 'user' is the MO related to the record
+                        // }
+                    })
+                    ->visible(fn ($record) => $record->status !== 'approved') // Only show edit action if status is 'rejected'
+                    ->disabled(fn ($record) => $record->status === 'approved'),
 
-
+                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -194,9 +207,9 @@ class VerifyReportResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListVerifyReports::route('/'),
-            'create' => Pages\CreateVerifyReport::route('/create'),
-            'edit' => Pages\EditVerifyReport::route('/{record}/edit'),
+            'index' => Pages\ListDmoVerifications::route('/'),
+            'create' => Pages\CreateDmoVerification::route('/create'),
+            'edit' => Pages\EditDmoVerification::route('/{record}/edit'),
         ];
     }
 }

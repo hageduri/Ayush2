@@ -8,15 +8,21 @@ use App\Models\Indicator;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
+
+use function PHPUnit\Framework\callback;
 
 class IndicatorResource extends Resource
 {
@@ -33,9 +39,34 @@ class IndicatorResource extends Resource
                 ->readOnly()
                 ->default(Auth::user()->nin),
 
-                TextInput::make('month')
-                ->default(Carbon::now()->format('F-Y'))  // Format the current date as "Month-Year"
-                ->readOnly(),
+                // TextInput::make('month')
+                // ->default(Carbon::now()->format('F-Y'))  // Format the current date as "Month-Year"
+                // ->readOnly(),
+
+                Select::make('month') //extracting month and year
+                ->options(function () {
+                    $months = [];
+                    $currentYear = Carbon::now()->year;
+                    foreach (range(1, 12) as $month) {
+                        $months[Carbon::createFromDate($currentYear, $month, 1)->format('F-Y')] = Carbon::createFromDate($currentYear, $month, 1)->format('F-Y');
+                    }
+                    return $months;
+                })
+
+                ->default(Carbon::now()->format('F-Y'))
+                ->required()
+                ->rules([  // making selection of month unique for each nin
+                    function ($get) {
+                        return Rule::unique('indicators', 'month')->where(function ($query) use ($get) {
+                            return $query->where('nin', $get('nin'));
+                        });
+                    },
+                ])
+                ->validationMessages([
+                    'unique' => 'A report for this month has already been submitted for this NIN.',
+                ])
+                ->visibleOn('create'),//making this field readonly on edit
+
 
                 TextInput::make('indicator_1')
                 ->numeric()
@@ -111,20 +142,32 @@ class IndicatorResource extends Resource
                     // 'reviewing' => 'warning',
                     'submitted' => 'success',
                     'rejected' => 'danger',
+                    'updated' => 'warning',
+                    'approved' => 'info'
                 }),
+                TextColumn::make('remarks'),
 
 
             ])
+            ->modifyQueryUsing(fn (Builder $query) =>
+            $query->where('nin', '=', Auth::user()->nin
+            ))//this line state that each mo will only can see his faclity member
             ->filters([
-                //
+                // SelectFilter::make('month')
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                ViewAction::make()
+                ->form([
+                    TextInput::make('status')
+                ]),
+                Tables\Actions\EditAction::make()
+                ->visible(fn ($record) => $record->status === 'rejected') // Only show edit action if status is 'rejected'
+                ->disabled(fn ($record) => $record->status !== 'rejected'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                // Tables\Actions\BulkActionGroup::make([
+                //     Tables\Actions\DeleteBulkAction::make(),
+                // ]),
             ]);
     }
 

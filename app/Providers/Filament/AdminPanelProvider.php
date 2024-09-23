@@ -28,6 +28,9 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            // ->brandLogo(asset('logo/Heading (1).png'))
+            // ->brandLogo('<img src="' . asset('logo/Heading.svg') . '" alt="Custom Logo" style="height: 50px;">')
+            ->brandName('AAMS')
             ->databaseNotifications()
             // ->profile()
             ->colors([

@@ -10,10 +10,17 @@ class EditIndicator extends EditRecord
 {
     protected static string $resource = IndicatorResource::class;
 
-    protected function getHeaderActions(): array
+    // protected function getHeaderActions(): array
+    // {
+    //     // return [
+    //     //     Actions\DeleteAction::make(),
+    //     // ];
+    // }
+    protected function mutateFormDataBeforeSave(array $data): array
     {
-        return [
-            Actions\DeleteAction::make(),
-        ];
+        $data['status'] = 'updated';
+        $data['remarks'] = null;
+
+        return $data;
     }
 }
