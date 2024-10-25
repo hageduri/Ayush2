@@ -22,11 +22,14 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\ExportAction;
+use Filament\Tables\Columns\Layout\Grid;
+use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use Filament\Tables\Columns\Layout\Split;
 
 class AllUsersResource extends Resource
 {
@@ -179,19 +182,32 @@ class AllUsersResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+
             ->columns([
-                TextColumn::make('name')->searchable()->sortable(),
-
-                TextColumn::make('facility.name'),
-                TextColumn::make('district.district_name'),
 
 
-                // TextColumn::make('email'),
-                TextColumn::make('gender'),
-                TextColumn::make('role')->label('Designation'),
-                TextColumn::make('contact_1')->label('Contact'),
-                TextColumn::make('status'),
-            ])
+
+                    TextColumn::make('name')
+                        ->searchable()
+                        ->sortable()
+                        ->weight('bold')
+                        ->description(fn ($record) => $record->email)
+                        // ->icon('heroicon-m-envelope')
+                        ->label('Name'),
+
+                    TextColumn::make('facility.name'),
+                    TextColumn::make('district.district_name'),
+
+                    TextColumn::make('gender'),
+                    TextColumn::make('role')->label('Designation'),
+
+                    TextColumn::make('contact_1')->label('Contact'),
+                    TextColumn::make('status'),
+
+
+                ])
+
+
             ->filters([
                 //
             ])

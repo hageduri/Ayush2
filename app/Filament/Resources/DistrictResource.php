@@ -12,6 +12,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\ExportAction;
+use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -47,8 +48,17 @@ class DistrictResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('district_name')->searchable()->sortable(),
-                TextColumn::make('district_code')->sortable()
+
+
+
+                    TextColumn::make('district_name')
+                        ->searchable()
+                        ->sortable()
+                        ->weight('bold'),
+                    // TextColumn::make('district_code')
+                    //     ->sortable()
+
+
             ])
             ->filters([
 

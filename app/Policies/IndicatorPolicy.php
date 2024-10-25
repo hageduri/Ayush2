@@ -9,6 +9,11 @@ use Illuminate\Auth\Access\Response;
 class IndicatorPolicy
 {
 
+
+    public function viewByAdmin(User $user): bool
+    {
+        return $user->role === 'ADMIN';
+    }
     public function viewReport(User $user): bool//DMoverification resource
     {
         return $user->role === 'DMO';
@@ -21,10 +26,7 @@ class IndicatorPolicy
         return $user->role === 'MO';
     }
 
-    public function viewReportByAdmin(User $user): bool
-    {
-        return $user->role === 'ADMIN'||'MO';
-    }
+
 
     /**
      * Determine whether the user can view the model.

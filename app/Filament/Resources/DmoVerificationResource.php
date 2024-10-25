@@ -78,10 +78,11 @@ class DmoVerificationResource extends Resource
                     ->color(fn (string $state): string => match ($state) {
                         // 'draft' => 'gray',
                         'pending' => 'warning',
-                        'submitted' => 'success',
+                        'submitted' => 'info',
                         'rejected' => 'danger',
-                        'approved' => 'info',
-                        'updated' => 'warning'
+                        'updated' => 'warning',
+                        'approved' => 'success'
+
                     }),
             ])
             ->modifyQueryUsing(function (Builder $query) {

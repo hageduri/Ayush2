@@ -7,6 +7,7 @@ use App\Filament\Resources\IndicatorResource\RelationManagers;
 use App\Models\Indicator;
 use Carbon\Carbon;
 use Filament\Forms;
+use Filament\Forms\Components\Grid as ComponentsGrid;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -14,6 +15,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\ViewAction;
+use Filament\Tables\Columns\Layout\Grid;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -140,10 +142,10 @@ class IndicatorResource extends Resource
                 ->color(fn (string $state): string => match ($state) {
                     // 'draft' => 'gray',
                     // 'reviewing' => 'warning',
-                    'submitted' => 'success',
+                    'submitted' => 'info',
                     'rejected' => 'danger',
                     'updated' => 'warning',
-                    'approved' => 'info'
+                    'approved' => 'success'
                 }),
                 TextColumn::make('remarks'),
 
@@ -158,17 +160,50 @@ class IndicatorResource extends Resource
             ->actions([
                 ViewAction::make()
                 ->form([
-                    TextInput::make('status')
-                ]),
+                    ComponentsGrid::make() // Use Grid to define columns
+                        ->schema([
+                            TextInput::make('nin')->columnSpan(1), // Adjust column span if needed
+                            TextInput::make('status')
+                            ->columnSpan(1),
+                            TextInput::make('month')->columnSpan(1),
+
+                            TextInput::make('indicator_1')->label('No. OPD cases in a month')->columnSpan(1),
+                            TextInput::make('indicator_2')->label('No. of people underwent Prakriti Assessment')->columnSpan(1),
+                            TextInput::make('indicator_3')->label('Portion of patient of DM on AYUSH Treatment')->columnSpan(1),
+                            TextInput::make('indicator_4')->label('Portion of patient of HT on AYUSH Treatment')->columnSpan(1),
+                            TextInput::make('indicator_5')->label('Population of above 30 years screen for HT')->columnSpan(1),
+                            TextInput::make('indicator_6')->label('No. of Individual empanelled in AYUSH Facilities')->columnSpan(1),
+                            TextInput::make('indicator_7')->label('Population of above 30 years screen for DM')->columnSpan(1),
+                            TextInput::make('indicator_8')->label('Group session held at community level for AYUSH lifestyle counselling')->columnSpan(1),
+                            TextInput::make('indicator_9')->label('Organizing/participating in inter sectoral meeting involving public')->columnSpan(1),
+                            TextInput::make('indicator_10')->label('Conduct outreach programme & AYUSH Awareness')->columnSpan(1),
+                        ])
+                        ->columns([
+                            1,
+                            'md' => 3, // Display 3 columns by default on larger screens
+                            // 'sm' => 1,      // Display 1 column on mobile screens (small)
+                        ]),
+                ])
+                ->modalHeading('Facility Details')
+                ->modalDescription('View facility and its indicators')
+                ->modalWidth('4xl'),
+
                 Tables\Actions\EditAction::make()
                 ->visible(fn ($record) => $record->status === 'rejected') // Only show edit action if status is 'rejected'
-                ->disabled(fn ($record) => $record->status !== 'rejected'),
+                ->disabled(fn ($record) => $record->status !== 'rejected')
+                ->mutateFormDataUsing(function (array $data): array {
+                    // Update the status field to 'updated'
+                    $data['status'] = 'updated';
+                    $data['remarks'] = null;
+                    return $data;
+                })
             ])
             ->bulkActions([
                 // Tables\Actions\BulkActionGroup::make([
                 //     Tables\Actions\DeleteBulkAction::make(),
                 // ]),
             ]);
+
     }
 
     public static function getRelations(): array
@@ -178,12 +213,14 @@ class IndicatorResource extends Resource
         ];
     }
 
+
+
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListIndicators::route('/'),
             'create' => Pages\CreateIndicator::route('/create'),
-            'edit' => Pages\EditIndicator::route('/{record}/edit'),
+            // 'edit' => Pages\EditIndicator::route('/{record}/edit'),
         ];
     }
 }

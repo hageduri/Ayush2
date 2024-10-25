@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\VerifyReportResource\Pages;
 use App\Filament\Resources\VerifyReportResource\RelationManagers;
 use App\Filament\Resources\VerifyReportResource\Widgets\StatusOverview;
+use App\Models\District;
 use App\Models\Facility;
 use App\Models\Indicator;
 
@@ -37,10 +38,10 @@ class VerifyReportResource extends Resource
 {
     protected static ?string $model = Indicator::class;
 
-    protected static ?string $label = 'Verify Report';
+    protected static ?string $label = 'Monthly Reports';
     public static function canViewAny(): bool
     {
-        return Auth::user()->can('viewReportByAdmin', Indicator::class);
+        return Auth::user()->can('viewByAdmin', Indicator::class);
     }
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
@@ -64,6 +65,9 @@ class VerifyReportResource extends Resource
     {
         return $table
             ->columns([
+
+                TextColumn::make('facility.district.district_name'),
+
                 TextColumn::make('facility.name')
                 ->label('Facility Name')
                 ->sortable()
@@ -83,20 +87,12 @@ class VerifyReportResource extends Resource
                     ->color(fn (string $state): string => match ($state) {
                         // 'draft' => 'gray',
                         'pending' => 'warning',
-                        'submitted' => 'success',
+                        'submitted' => 'info',
                         'rejected' => 'danger',
                         'updated' => 'warning',
-                        'approved' => 'info'
+                        'approved' => 'success'
                     }),
             ])
-            // ->modifyQueryUsing(function (Builder $query) {
-            //     // Filter by the DMO's district
-            //     return $query
-            //     ->with('indicator')
-            //     ->whereHas('district', function ($query) {
-            //         $query->where('district_code', Auth::user()->district_code);
-            //     });
-            // })
 
             ->filters([
                 SelectFilter::make('month')
@@ -107,42 +103,25 @@ class VerifyReportResource extends Resource
                         $months[Carbon::createFromDate($currentYear, $month, 1)->format('F-Y')] = Carbon::createFromDate($currentYear, $month, 1)->format('F-Y');
                     }
                     return $months;
-                })
-                ->default(function () {
-                    // Get the previous month
-                    $previousMonth = Carbon::now()->subMonth();
+                }),
 
-                    // Format it as 'F-Y' (e.g., 'August-2023')
-                    return $previousMonth->format('F-Y');
-                })
+                SelectFilter::make('district')
+                    ->label('District')
+                    ->relationship('facility.district', 'district_name')
+                    ->options(District::all()->pluck('district_name', 'id')),
+
+                SelectFilter::make('Status')
+                ->options([
+                    'submitted' => 'Submitted',
+                    'pending' => 'Pending',
+                    'rejected' => 'Rejected',
+                    'updated' => 'Updated',
+                    'approved' => 'Approved',
+                ])
+
             ],layout: FiltersLayout::AboveContent)
 
             ->actions([
-                // ViewAction::make('Verify')
-                // ->link()
-                // ->icon('heroicon-s-document-check')
-                // ->color('danger')
-                // ->form([
-                //     Select::make('indicator.status')
-                //         ->label('Status')
-                //         ->options([
-                //             'approved'=>'Approve',
-                //             'rejected'=>'Reject'
-                //         ]),
-
-                // ])->action(function ($record, $data) {
-                //     // Fetch the related indicator
-                //     $indicator = $record->indicator; // Assuming the Facility model has a relationship to Indicator
-
-                //     if ($indicator) {
-                //         // Update the status of the related indicator
-                //         $indicator->update([
-                //             'status' => $data['indicator']['status'], // Access 'indicator.status' from form data
-                //         ]);
-                //     }
-                // }),
-
-
 
                 ViewAction::make()
                 ->form([
